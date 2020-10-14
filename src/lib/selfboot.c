@@ -13,6 +13,7 @@
 #include <program_loading.h>
 #include <timestamp.h>
 #include <cbmem.h>
+#include <hob.h>
 
 /* The type syntax for C is essentially unparsable. -- Rob Pike */
 typedef int (*checker_t)(struct cbfs_payload_segment *cbfssegs, void *args);
@@ -255,7 +256,7 @@ static bool _selfload(struct prog *payload, checker_t f, void *args)
 	rdev_munmap(prog_rdev(payload), data);
 
 	/* Pass cbtables to payload if architecture desires it. */
-	prog_set_entry(payload, (void *)entry, cbmem_find(CBMEM_ID_CBTABLE));
+	prog_set_entry(payload, (void *)entry, build_payload_hobs ()); //cbmem_find(CBMEM_ID_CBTABLE));
 
 	return true;
 out:

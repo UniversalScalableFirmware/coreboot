@@ -373,5 +373,9 @@ spd.bin-type := spd
 endif
 
 ramstage-y += uuid.c
+ramstage-y += hob.c
+ramstage-y += build_payload_hobs.c
+CPPFLAGS_common += -Isrc/vendorcode/intel/edk2/UDK2017/MdePkg/Include
+CPPFLAGS_common += -Isrc/vendorcode/intel/edk2/UDK2017/MdePkg/Include/Ia32
 
 romstage-$(CONFIG_ROMSTAGE_SPD_SMBUS) += spd_cache.c
