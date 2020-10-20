@@ -759,6 +759,10 @@ static int cbfstool_convert_mkpayload(struct buffer *buffer,
 	if (ret != 0)
 		ret = parse_fv_to_payload(buffer, &output, param.compression);
 
+	/* check if it is uniersal payload */
+	if (ret != 0)
+		ret = parse_universal_payload (buffer, &output, param.compression);
+
 	/* If it's neither ELF nor UEFI Fv, try bzImage */
 	if (ret != 0)
 		ret = parse_bzImage_to_payload(buffer, &output,

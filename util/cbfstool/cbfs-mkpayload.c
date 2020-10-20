@@ -11,6 +11,7 @@
 #include "fv.h"
 #include "coff.h"
 #include "fdt.h"
+#include "upld.h"
 
 /* serialize the seg array into the buffer.
  * The buffer is assumed to be large enough.
@@ -274,6 +275,63 @@ int parse_flat_binary_to_payload(const struct buffer *input,
 	output->size = doffset + segs[0].len;
 	xdr_segs(output, segs, 2);
 	return 0;
+}
+
+int parse_universal_payload(const struct buffer *input, struct buffer *output,
+		            enum comp_algo algo)
+{
+	comp_func_ptr compress;
+	struct cbfs_payload_segment segs[2] = { {0} };
+	upld_info_header_t    *upld;
+	int doffset, len = 0;
+
+	compress = compression_function(algo);
+	if (!compress)
+		return -1;
+
+	DEBUG("start: prese_universal_payload");
+
+	upld = (upld_info_header_t *) input->data;
+	if (upld->header.identifier != UPLD_SIGNATURE) {
+		INFO("Not a universal payload\n");
+		return -1;
+	}
+
+
+       if (buffer_create(output, (sizeof(segs) + input->size),
+			input->name) != 0)
+		return -1;
+	memset(output->data, 0, output->size);
+	doffset = (2 * sizeof(*segs));
+
+
+	/* Prepare code segment */
+	segs[0].type = PAYLOAD_SEGMENT_CODE;
+	segs[0].load_addr = upld->image_base - upld->image_offset;
+	segs[0].mem_len = input->size;
+	segs[0].offset = doffset;
+
+	if (!compress(input->data, input->size, output->data + doffset, &len) &&
+		             (unsigned int)len < input->size) {
+		segs[0].compression = algo;
+		segs[0].len = len;
+		DEBUG("compress len = 0x%x\n", len);
+	} else {
+	      WARN("Compression failed or would make the data bigger "
+			                      "- disabled.\n");
+	         segs[0].compression = 0;
+		 segs[0].len = input->size;
+		 memcpy(output->data + doffset, input->data, input->size);
+	}
+
+	/* prepare entry point segment */
+	segs[1].type = PAYLOAD_SEGMENT_ENTRY;
+	segs[1].load_addr = upld->image_base + upld->entry_point_offset;
+	output->size = doffset + segs[0].len;
+	xdr_segs(output, segs, 2);
+
+	return 0;
+
 }
 
 int parse_fv_to_payload(const struct buffer *input, struct buffer *output,

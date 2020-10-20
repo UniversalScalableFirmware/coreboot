@@ -175,6 +175,8 @@ int parse_elf_to_payload(const struct buffer *input, struct buffer *output,
 			 enum comp_algo algo);
 int parse_fv_to_payload(const struct buffer *input, struct buffer *output,
 			enum comp_algo algo);
+int parse_universal_payload (const struct buffer *input, struct buffer *output,
+			enum comp_algo algo);
 int parse_fit_to_payload(const struct buffer *input, struct buffer *output,
 			 enum comp_algo algo);
 int parse_bzImage_to_payload(const struct buffer *input,
